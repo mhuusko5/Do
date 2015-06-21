@@ -20,7 +20,15 @@ Drag Do-[Swift version].swift into your project.
 
 ## Usage
 
-### Queues
+### Contents
+
+- [Queues](#queues)
+- [Sync](#sync)
+- [Loop](#loop)
+- [After](#after)
+- [Async](#async)
+
+### Queues ###
 
 ***Do!*** provides easy access to the main queue, global priority queues, as well as the global 'quality of service' queues available in `OS X 10.10` and `iOS 8.0` and later (with appropriate fallbacks in place).
 
@@ -131,4 +139,34 @@ let cancel = Do.after(10) {
 Do.after(2) {
     cancel()
 }
+```
+
+### Async
+
+***Do!*** provides a wrapper around `dispatch_async` that is succinct, and convenient. That's it really, though. For added features (e.g. chaining) I recommend [Async](https://github.com/duemunk/Async) by [duemunk](https://github.com/duemunk).
+
+```swift
+Do.async(userInitiatedQueue) {}
+```
+
+```swift
+Do.barrierAsync(userInitiatedQueue) {}
+```
+
+```swift
+let group = dispatch_group_create()
+
+Do.groupAsync(group, userInitiatedQueue) {}
+
+Do.barrierGroupAsync(group, userInitiatedQueue) {}
+```
+
+```swift
+Do.main {}
+
+Do.background {}
+
+Do.userInteractive {}
+
+Do.userInitiated {}
 ```
