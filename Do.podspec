@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'Do'
-  s.version = '0.8.0'
+  s.version = '0.8.1'
   s.summary = 'A Swift-er way to do GCD-related things.'
   
   s.license = { :type => 'MIT', :file => 'LICENSE' }
