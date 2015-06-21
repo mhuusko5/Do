@@ -10,7 +10,9 @@
 
 ```ruby
 pod 'Do' # Latest Swift compatible
+
 pod 'Do/2.0' # Swift 2.0 compatible
+
 pod 'Do/1.2' # Swift 1.2 compatible
 ```
 
@@ -22,11 +24,14 @@ Drag Do-[Swift version].swift into your project.
 
 ### Contents
 
-- [Queues](#queues)
-- [Sync](#sync)
-- [Loop](#loop)
-- [After](#after)
-- [Async](#async)
+- [Queues](#queues) (access to global queues, and current queue checking)
+- [Sync](#sync) (deadlock safe `dispatch_sync`/`dispatch_barrier_sync` with return values)
+- [Loop](#loop) (deadlock safe `dispatch_apply` with range version)
+- [After](#after) (cancellable `dispatch_after`)
+- [Concurrent](#concurrent) (simple way to have async operations with a limit to how many can concurrently process)
+- [Once](#once) (hackery-enabled succinct `dispatch_once`)
+- [Throttle](#throttle) (hackery-enabled succinct throttling)
+- [Async](#async) (convenience functions related to `dispatch_async`)
 
 ### Queues ###
 
@@ -73,7 +78,7 @@ Do.barrierSync(someConcurrentQueue) {
 }
 ```
 
-More importantly, ***Do!*** provides versions which returns values, which is perfect for synchronizing access to resources.
+More importantly, ***Do!*** provides versions which returns values, which is perfect for synchronizing access to resources...
 
 ```swift
 let resource: Resource = Do.sync(someSerialQueue) {
@@ -88,6 +93,19 @@ let resource: Resource = Do.barrierSync(someConcurrentQueue) {
     // .. heavy work that should block queue...
     
     return importantResource
+}
+```
+
+.. or even synchronizing properties.
+
+```swift
+class Variable {
+    private var _value: Any
+    
+    var value: Any {
+        get { return barrierSync(someConcurrentQueue) { self._value } }
+        set { barrierSync(someConcurrentQueue) { self._value = newValue } }
+    }
 }
 ```
 
@@ -138,6 +156,86 @@ let cancel = Do.after(10) {
 
 Do.after(2) {
     cancel()
+}
+```
+
+### Concurrent
+
+***Do!*** provides a simple but powerful mechanism for dispatching async operations (which might have async/nested dispatches themselves) that can be limited to processing sequentially or N at a time.
+
+```swift
+static token = Do.ConcurrentToken() // store this somewhere!
+
+// ...
+
+for i in 0..<100 {
+    Do.concurrent(token, highPriorityQueue) { done in
+        // some heavy stuff...
+
+        done()
+    }
+}
+
+// the 100 operations will process one at a time...
+```
+
+```swift
+static token = Do.ConcurrentToken(limit: 5)
+
+for i in 0..<50 {
+    Do.concurrent(token, mainQueue) { done in
+        Do.after(0.5) {
+            done()        
+        }
+    }
+    
+    Do.concurrent(token, backgroundQueue) { done in
+        Do.after(1.0) {
+            done()        
+        }
+    }
+}
+
+// the 100 operations (with different logic/queues) will process 5 at a time
+```
+
+### Once
+
+***Do!*** provides an uber-succinct wrapper around `dispatch_once` (using hackery.. so beware, it works/is stable, but is not guaranteed to be the most performant solution).
+
+```swift
+Do.once {
+    print("Hello world!")
+}
+```
+
+***Do!*** also provides a version which stores the result of the initial dispatch, and simply returns the value on all subsequent dispatches (again, hackery).
+
+```swift
+for i in 0..<10 {
+    let message: String = Do.once {
+        print("Some lazy/heavy stuff that should only happen once ;)")
+        
+        return "Hello world!"
+    }
+    
+    print(message)
+}
+```
+
+### Throttle
+
+***Do!*** provides an uber-succinct way to dispatch a block a max of once per N seconds (again, hackery).
+
+```swift
+Do.throttle(3.4) {
+    print("Hello world!")
+}
+```
+
+```swift
+Do.throttle(0.5, backgroundQueue) {
+    print("Hello world!")
 }
 ```
 
