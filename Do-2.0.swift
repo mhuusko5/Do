@@ -388,7 +388,7 @@ private let synchQueue = dispatch_queue_create("com.mhuusko5.Do.Synch", DISPATCH
 
 private var staticVariables = [String: Any]()
 
-private func StaticVariable<T>(@autoclosure(escaping) value: () -> T? = nil, type: T.Type = T.self, key: String) -> Variable<T> {
+private func StaticVariable<T>(@autoclosure(escaping) value value: () -> T? = nil, type: T.Type = T.self, key: String) -> Variable<T> {
     return barrierSync(synchQueue) {
         var variable = staticVariables[key]
         

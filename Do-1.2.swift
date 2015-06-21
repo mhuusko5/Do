@@ -32,7 +32,7 @@ import Foundation
 
         // because 'token.limit' is '1', the 200 operations (with different work/logic, and on different queues) will process one at a time... simple!
 */
-public func concurrent(token: ConcurrentToken, queue: dispatch_queue_t, block: ConcurrentBlock) {
+public func concurrent(_ token: ConcurrentToken, _ queue: dispatch_queue_t, _ block: ConcurrentBlock) {
     func dispatch() {
         if token.executingCount < token.limit {
             token.executingCount++
@@ -49,7 +49,8 @@ public func concurrent(token: ConcurrentToken, queue: dispatch_queue_t, block: C
                 }
             }
         } else {
-            token.queuedOperations.append((queue, block))
+            let operation = (queue, block)
+            token.queuedOperations.append(operation)
         }
     }
     
@@ -80,7 +81,7 @@ public class ConcurrentToken {
             print("Hello world!")
         }
 */
-public func throttle(seconds: Double, _ queue: dispatch_queue_t? = nil, _ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, block: dispatch_block_t) {
+public func throttle(_ seconds: Double, _ queue: dispatch_queue_t? = nil, _ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, _ block: dispatch_block_t) {
     let key = "\(file).\(line).\(column).\(function)"
     
     let throttled: Bool = barrierSync(synchQueue) {
@@ -107,7 +108,7 @@ public func throttle(seconds: Double, _ queue: dispatch_queue_t? = nil, _ file: 
 
         Do.once { print("Hello world!") }
 */
-public func once(_ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, block: dispatch_block_t) {
+public func once(_ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, _ block: dispatch_block_t) {
     let key = "\(file).\(line).\(column).\(function)"
     
     barrierSync(synchQueue) {
@@ -132,7 +133,7 @@ public func once(_ file: String = __FILE__, _ line: Int = __LINE__, _ column: In
             print(message)
         }
 */
-public func once<T>(_ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, block: () -> T) -> T {
+public func once<T>(_ file: String = __FILE__, _ line: Int = __LINE__, _ column: Int = __COLUMN__, _ function: String = __FUNCTION__, _ block: () -> T) -> T {
     let key = "\(file).\(line).\(column).\(function)"
     
     return barrierSync(synchQueue) {
@@ -150,7 +151,7 @@ public func once<T>(_ file: String = __FILE__, _ line: Int = __LINE__, _ column:
 // MARK: - Sync (deadlock safe; with return value versions) -
 
 /// Synchronously dispatches 'block' on 'queue'.
-public func sync(queue: dispatch_queue_t, block: dispatch_block_t) {
+public func sync(_ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     isCurrentQueue(queue) ? block() : dispatch_sync(queue, block)
 }
 
@@ -163,7 +164,7 @@ public func sync(queue: dispatch_queue_t, block: dispatch_block_t) {
             return self.importantResource
         }
 */
-public func sync<T>(queue: dispatch_queue_t, block: () -> T) -> T {
+public func sync<T>(_ queue: dispatch_queue_t, _ block: () -> T) -> T {
     var returnValue: T?
     
     sync(queue) {
@@ -174,7 +175,7 @@ public func sync<T>(queue: dispatch_queue_t, block: () -> T) -> T {
 }
 
 /// Synchronously (waiting for/blocking other "barrier" calls) dispatches 'block' on 'queue'.
-public func barrierSync(queue: dispatch_queue_t, block: dispatch_block_t) {
+public func barrierSync(_ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     isCurrentQueue(queue) ? block() : dispatch_barrier_sync(queue, block)
 }
 
@@ -187,7 +188,7 @@ public func barrierSync(queue: dispatch_queue_t, block: dispatch_block_t) {
             return self.importantResource
         }
 */
-public func barrierSync<T>(queue: dispatch_queue_t, block: () -> T) -> T {
+public func barrierSync<T>(_ queue: dispatch_queue_t, _ block: () -> T) -> T {
     var returnValue: T?
     
     barrierSync(queue) {
@@ -209,7 +210,7 @@ public func barrierSync<T>(queue: dispatch_queue_t, block: () -> T) -> T {
             print(i)
         }
 */
-public func loop(times: Int, _ queue: dispatch_queue_t? = nil, block: (Int) -> Void) {
+public func loop(_ times: Int, _ queue: dispatch_queue_t? = nil, _ block: (Int) -> Void) {
     if queue == nil || isCurrentQueue(queue!) {
         for i in 0..<times {
             block(i)
@@ -229,7 +230,7 @@ public func loop(times: Int, _ queue: dispatch_queue_t? = nil, block: (Int) -> V
             print(i)
         }
 */
-public func loop(range: Range<Int>, _ queue: dispatch_queue_t? = nil, block: (Int) -> Void) {
+public func loop(_ range: Range<Int>, _ queue: dispatch_queue_t? = nil, _ block: (Int) -> Void) {
     loop(range.endIndex - range.startIndex, queue) { i in
         block(range.startIndex + i)
     }
@@ -250,7 +251,7 @@ public func loop(range: Range<Int>, _ queue: dispatch_queue_t? = nil, block: (In
 
         cancel()
 */
-public func after(seconds: Double, _ queue: dispatch_queue_t = mainQueue, block: dispatch_block_t) -> () -> Void {
+public func after(_ seconds: Double, _ queue: dispatch_queue_t = mainQueue, _ block: dispatch_block_t) -> () -> Void {
     var cancelled = false
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(seconds * Double(NSEC_PER_SEC))), queue) {
@@ -267,22 +268,22 @@ public func after(seconds: Double, _ queue: dispatch_queue_t = mainQueue, block:
 // MARK: - Async (with convenience queue functions) -
 
 /// Asynchronously dispatches 'block' on 'queue'.
-public func async(queue: dispatch_queue_t, block: dispatch_block_t) {
+public func async(_ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     dispatch_async(queue, block)
 }
 
 /// Asynchronously (waiting for/blocking other "barrier" calls) dispatches 'block' on 'queue'.
-public func barrierAsync(queue: dispatch_queue_t, block: dispatch_block_t) {
+public func barrierAsync(_ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     dispatch_barrier_async(queue, block)
 }
 
 /// Asynchronously dispatches 'block' on 'queue' in 'group'.
-public func groupAsync(group: dispatch_group_t, queue: dispatch_queue_t, block: dispatch_block_t) {
+public func groupAsync(_ group: dispatch_group_t, _ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     dispatch_group_async(group, queue, block)
 }
 
 /// Asynchronously (waiting for/blocking other "barrier" calls) dispatches 'block' on 'queue' in 'group'.
-public func barrierGroupAsync(group: dispatch_group_t, queue: dispatch_queue_t, block: dispatch_block_t) {
+public func barrierGroupAsync(_ group: dispatch_group_t, _ queue: dispatch_queue_t, _ block: dispatch_block_t) {
     dispatch_group_enter(group)
     
     barrierAsync(queue) {
@@ -293,29 +294,29 @@ public func barrierGroupAsync(group: dispatch_group_t, queue: dispatch_queue_t, 
 }
 
 /// Asynchronously dispatches 'block' on the "main" queue.
-public func main(block: dispatch_block_t) {
+public func main(_ block: dispatch_block_t) {
     async(mainQueue, block)
 }
 
 /// Asynchronously dispatches 'block' on the global "background" queue.
-public func background(block: dispatch_block_t) {
+public func background(_ block: dispatch_block_t) {
     async(backgroundQueue, block)
 }
 
 /// Asynchronously dispatches 'block' on the global "user interactive" queue.
-public func userInteractive(block: dispatch_block_t) {
+public func userInteractive(_ block: dispatch_block_t) {
     async(userInteractiveQueue, block)
 }
 
 /// Asynchronously dispatches 'block' on the global "user initiated" queue.
-public func userInitiated(block: dispatch_block_t) {
+public func userInitiated(_ block: dispatch_block_t) {
     async(userInitiatedQueue, block)
 }
 
 // MARK: - Queues -
 
 /// Checks whether 'queue' is the current dispatch queue.
-public func isCurrentQueue(queue: dispatch_queue_t) -> Bool {
+public func isCurrentQueue(_ queue: dispatch_queue_t) -> Bool {
     return strcmp(dispatch_queue_get_label(queue), dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL)) == 0
 }
 
@@ -368,7 +369,7 @@ private let synchQueue = dispatch_queue_create("com.mhuusko5.Do.Synch", DISPATCH
 
 private var staticVariables = [String: Any]()
 
-private func StaticVariable<T>(@autoclosure(escaping) value: () -> T? = nil, type: T.Type = T.self, key key: String) -> Variable<T> {
+private func StaticVariable<T>(@autoclosure(escaping) value value: () -> T? = nil, type type: T.Type = T.self, key key: String) -> Variable<T> {
     return barrierSync(synchQueue) {
         var variable = staticVariables[key]
         
