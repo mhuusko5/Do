@@ -244,27 +244,27 @@ Do.throttle(0.5, backgroundQueue) {
 ***Do!*** provides a wrapper around `dispatch_async` that is succinct, and convenient. That's it really, though. For added features (e.g. chaining) I recommend [Async](https://github.com/duemunk/Async) by [duemunk](https://github.com/duemunk).
 
 ```swift
-Do.async(userInitiatedQueue) {}
+Do.async(userInitiatedQueue) { ... }
 ```
 
 ```swift
-Do.barrierAsync(userInitiatedQueue) {}
+Do.barrierAsync(userInitiatedQueue) { ... }
 ```
 
 ```swift
 let group = dispatch_group_create()
 
-Do.groupAsync(group, userInitiatedQueue) {}
+Do.groupAsync(group, userInitiatedQueue) { ... }
 
-Do.barrierGroupAsync(group, userInitiatedQueue) {}
+Do.barrierGroupAsync(group, userInitiatedQueue) { ... }
 ```
 
 ```swift
-Do.main {}
+Do.main { ... }
 
-Do.background {}
+Do.background { ... }
 
-Do.userInteractive {}
+Do.userInteractive { ... }
 
-Do.userInitiated {}
+Do.userInitiated { ... }
 ```
