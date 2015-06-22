@@ -235,7 +235,12 @@ public func loop(range: Range<Int>, _ queue: dispatch_queue_t? = nil, _ block: (
     }
 }
 
-// MARK: - After (with returned cancel block) -
+// MARK: - After (with cancellable version) -
+
+/// Schedules 'block' to be dispatched on 'queue' (defaults to "main" queue) after 'seconds'.
+public func after(seconds: Double, _ queue: dispatch_queue_t = mainQueue, _ block: dispatch_block_t) {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(seconds * Double(NSEC_PER_SEC))), queue, block)
+}
 
 /**
     Schedules 'block' to be dispatched on 'queue' (defaults to "main" queue) after 'seconds'.
@@ -244,16 +249,16 @@ public func loop(range: Range<Int>, _ queue: dispatch_queue_t? = nil, _ block: (
 
     Usage:
 
-        let cancel = Do.after(3.0) {
+        let cancel = Do.afterCancel(3.0) {
             print("Hello world!")
         }
 
         cancel()
 */
-public func after(seconds: Double, _ queue: dispatch_queue_t = mainQueue, _ block: dispatch_block_t) -> () -> Void {
+public func afterCancel(seconds: Double, _ queue: dispatch_queue_t = mainQueue, _ block: dispatch_block_t) -> () -> Void {
     var cancelled = false
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(seconds * Double(NSEC_PER_SEC))), queue) {
+    after(seconds, queue) {
         if !barrierSync(synchQueue, { cancelled }) {
             block()
         }

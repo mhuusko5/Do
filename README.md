@@ -28,7 +28,7 @@ Drag Do-[Swift version].swift into your project.
 - [Sync](#sync) (deadlock safe `dispatch_sync`/`dispatch_barrier_sync` with return values)
 - [Loop](#loop) (deadlock safe `dispatch_apply` with range version)
 - [After](#after) (cancellable `dispatch_after`)
-- [Concurrent](#concurrent) (simple way to have async operations with a limit to how many can concurrently process)
+- [Concurrent](#concurrent) (simple mechanism for async operations with a limit to how many can process concurrently)
 - [Once](#once) (hackery-enabled succinct `dispatch_once`)
 - [Throttle](#throttle) (hackery-enabled succinct throttling)
 - [Async](#async) (convenience functions related to `dispatch_async`)
@@ -135,7 +135,7 @@ Do.loop(15..<55, highPriorityQueue) { i in
 
 ### After
 
-***Do!*** provides a wrapper around `dispatch_after` that is succinct, defaults to the main queue, and returns a block for cancellation of the scheduled dispatch.
+***Do!*** provides a wrapper around `dispatch_after` that is succinct and defaults to the main queue...
 
 ```swift
 Do.after(3.0) {
@@ -149,8 +149,10 @@ Do.after(0.5, backgroundQueue) {
 }
 ```
 
+.. as well as a version returning a block for cancellation of the scheduled dispatch.
+
 ```swift
-let cancel = Do.after(10) {
+let cancel = Do.afterCancel(10) {
     print("Hello world!")
 }
 
